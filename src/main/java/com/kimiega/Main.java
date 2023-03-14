@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.function.Predicate;
 
 import com.kimiega.linal.Matrix;
 import com.kimiega.linal.MatrixGenerator;
@@ -16,26 +19,36 @@ import com.kimiega.utils.Error;
 
 public class Main {
     private static final String RANDOM_TAG = "--random";
+    private static final String COMMA_TAG = "--comma";
+
+    private static final Predicate<String> validateArgs = (String s) -> !s.equals(RANDOM_TAG) && !s.equals(COMMA_TAG);
     public static void main(String[] args) {
         boolean isFromFile = false;
         boolean isRandom = Arrays.asList(args).contains(RANDOM_TAG);
+        boolean isWithComma = Arrays.asList(args).contains(COMMA_TAG);
         int n;
         double eps;
         Double[][] x;
         Double[] b;
         Scanner input;
         try {
-            if (Arrays.stream(args).anyMatch(s->!s.equals(RANDOM_TAG))) {
-                input = new Scanner(new File(Arrays.stream(args).filter(s->!s.equals(RANDOM_TAG)).findFirst().get()));
+            if (Arrays.stream(args).anyMatch(validateArgs)) {
+                    input = new Scanner(new File(Arrays.stream(args).filter(validateArgs).findFirst().get()));
                 isFromFile = true;
             } else
                 input = new Scanner(System.in);
+            if (isWithComma)
+                input.useLocale(Locale.FRENCH);
+            else
+                input.useLocale(Locale.US);
             if (!isFromFile)
                 System.out.print("Введите размер матрицы: ");
             n = input.nextInt();
             if (!isFromFile)
                 System.out.print("Введите точность: ");
             eps = input.nextDouble();
+            if (eps <= 0)
+                throw new InputMismatchException();
             if (!isFromFile && !isRandom)
                 System.out.println("Введите матрицу: ");
             if (!isRandom) {
@@ -56,6 +69,9 @@ public class Main {
             return;
         } catch (InputMismatchException ex) {
             System.err.println("Неправильный формат ввода");
+            return;
+        } catch (NoSuchElementException ex) {
+            System.err.println("Введены не все данные");
             return;
         }
         input.close();
